@@ -1,22 +1,23 @@
 import { create } from "zustand";
 import { type Todo, type Priority, type TodoData } from "../types/todo";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { LogicalSize } from "@tauri-apps/api/dpi";
+
+const appWindow = getCurrentWebviewWindow();
 
 interface TodoStore {
   todos: Todo[];
-  expanded: boolean;
+  collapsed: boolean;
   darkMode: boolean;
-  focusMode: boolean;
   loaded: boolean;
 
   addTodo: (text: string, priority: Priority) => void;
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
-  reorderTodos: (todos: Todo[]) => void;
   clearDone: () => void;
-  setExpanded: (v: boolean) => void;
-  toggleExpanded: () => void;
+  setCollapsed: (v: boolean) => void;
+  toggleCollapsed: () => void;
   setDarkMode: (v: boolean) => void;
-  setFocusMode: (v: boolean) => void;
   loadFromDisk: (data: TodoData) => void;
   saveToDisk: () => void;
 }
@@ -27,9 +28,8 @@ function generateId(): string {
 
 export const useTodoStore = create<TodoStore>((set, get) => ({
   todos: [],
-  expanded: false,
+  collapsed: true,
   darkMode: true,
-  focusMode: false,
   loaded: false,
 
   addTodo: (text, priority) => {
@@ -56,23 +56,23 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     get().saveToDisk();
   },
 
-  reorderTodos: (todos) => {
-    set({ todos });
-    get().saveToDisk();
-  },
-
   clearDone: () => {
     set((s) => ({ todos: s.todos.filter((t) => !t.done) }));
     get().saveToDisk();
   },
 
-  setExpanded: (v) => set({ expanded: v }),
-  toggleExpanded: () => set((s) => ({ expanded: !s.expanded })),
+  setCollapsed: (v) => {
+    set({ collapsed: v });
+    appWindow.setSize(new LogicalSize(300, v ? 34 : 420)).catch(() => {});
+  },
+  toggleCollapsed: () => {
+    const next = !get().collapsed;
+    get().setCollapsed(next);
+  },
   setDarkMode: (v) => {
     set({ darkMode: v });
     get().saveToDisk();
   },
-  setFocusMode: (v) => set({ focusMode: v }),
 
   loadFromDisk: (data) => {
     set({ todos: data.todos, darkMode: data.darkMode, loaded: true });

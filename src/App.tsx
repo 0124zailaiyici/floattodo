@@ -3,45 +3,21 @@ import { useTodoStore } from "./store/todoStore";
 import TodoItem from "./components/TodoItem";
 import TodoInput from "./components/TodoInput";
 import BottomToolbar from "./components/BottomToolbar";
-let dragState: {
-  startX: number;
-  startY: number;
-  winX: number;
-  winY: number;
-} | null = null;
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { LogicalSize } from "@tauri-apps/api/dpi";
 
-function handleMouseMove(e: MouseEvent) {
-  if (!dragState) return;
-  const dx = e.screenX - dragState.startX;
-  const dy = e.screenY - dragState.startY;
-  try {
-    const invoke = (window as any).__TAURI_INTERNALS__?.invoke;
-    if (invoke) {
-      invoke("set_window_position", {
-        x: dragState.winX + dx,
-        y: dragState.winY + dy,
-      });
-    }
-  } catch {}
-}
-
-function handleMouseUp() {
-  dragState = null;
-  document.removeEventListener("mousemove", handleMouseMove);
-  document.removeEventListener("mouseup", handleMouseUp);
-}
+const appWindow = getCurrentWebviewWindow();
 
 function App() {
   const {
     todos,
-    expanded,
+    collapsed,
     darkMode,
-    focusMode,
     loaded,
     addTodo,
     toggleTodo,
     deleteTodo,
-    toggleExpanded,
+    toggleCollapsed,
     loadFromDisk,
   } = useTodoStore();
 
@@ -64,59 +40,97 @@ function App() {
     }
   }, []);
 
-  const onDragStart = useCallback((e: React.MouseEvent) => {
+  useEffect(() => {
+    if (!loaded) return;
+    appWindow.setSize(new LogicalSize(300, collapsed ? 34 : 420)).catch(() => {});
+  }, [loaded]);
+
+  const startDrag = useCallback(async (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest(".no-drag")) return;
-    dragState = {
-      startX: e.screenX,
-      startY: e.screenY,
-      winX: e.screenX,
-      winY: e.screenY,
-    };
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    try {
+      await appWindow.startDragging();
+    } catch {}
   }, []);
 
   if (!loaded) return null;
 
-  const maxVisible = expanded ? todos.length : 5;
-  const visibleTodos = todos.slice(0, maxVisible);
+  const doneCount = todos.filter((t) => t.done).length;
+
+  if (collapsed) {
+    const pct = todos.length ? doneCount / todos.length : 0;
+    return (
+      <div
+        className="h-screen bg-white dark:bg-[#1a1a2e] text-gray-900 dark:text-gray-100
+          rounded-lg overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10
+          flex items-center select-none"
+      >
+        {/* Drag handle */}
+        <div
+          className="h-full flex items-center px-2 cursor-grab active:cursor-grabbing
+            text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-sm leading-none"
+          onMouseDown={startDrag}
+        >
+          ⠿
+        </div>
+
+        {/* Info + progress decoration */}
+        <div className="flex-1 flex items-center gap-2 min-w-0 h-full px-1">
+          <span className="text-xs font-semibold whitespace-nowrap">📋 FloatTodo</span>
+
+          {/* Progress bar decoration */}
+          <div className="flex-1 max-w-[72px] h-[3px] rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-green-500 to-cyan-400 transition-all"
+              style={{ width: `${pct * 100}%` }}
+            />
+          </div>
+
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 tabular-nums tracking-tight">
+            {doneCount}/{todos.length}
+          </span>
+        </div>
+
+        {/* Expand button */}
+        <button
+          onClick={toggleCollapsed}
+          className="h-full px-2.5 flex items-center no-drag
+            text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300
+            hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-xs"
+        >
+          ▸
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
-      className={`h-screen flex flex-col transition-all duration-200
-        ${focusMode ? "opacity-40" : "opacity-100"}
-        ${darkMode
-          ? "bg-[#1a1a2e] text-gray-200"
-          : "bg-white text-gray-800 shadow-lg"
-        }
-        rounded-lg overflow-hidden shadow-2xl border ${darkMode ? "border-white/10" : "border-gray-200"}`}
-      onMouseDown={onDragStart}
+      className="h-screen flex flex-col bg-white dark:bg-[#1a1a2e] text-gray-900 dark:text-gray-100
+        rounded-lg overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 select-none"
     >
-      <div className="flex items-center justify-between px-3 py-2 drag-region">
+      <div
+        className="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-white/5"
+        onMouseDown={startDrag}
+      >
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold">📋 FloatTodo</span>
-          {!expanded && todos.length > 5 && (
-            <span className="text-[10px] text-gray-400">+{todos.length - 5}</span>
-          )}
         </div>
-        <div className="flex items-center gap-1 no-drag">
-          {!expanded && (
-            <button
-              onClick={toggleExpanded}
-              className="text-gray-400 hover:text-white text-xs px-1"
-              title="展开"
-            >
-              ▸
-            </button>
-          )}
-        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); toggleCollapsed(); }}
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors no-drag text-xs px-1"
+          title="折叠"
+        >
+          ▾
+        </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-none">
-        {visibleTodos.length === 0 ? (
-          <div className="text-center text-gray-500 text-xs py-6">暂无待办</div>
+      <div className="flex-1 overflow-y-auto">
+        {todos.length === 0 ? (
+          <div className="text-center text-gray-400 dark:text-gray-500 text-xs py-8">
+            暂无待办
+          </div>
         ) : (
-          visibleTodos.map((todo) => (
+          todos.map((todo) => (
             <TodoItem
               key={todo.id}
               todo={todo}

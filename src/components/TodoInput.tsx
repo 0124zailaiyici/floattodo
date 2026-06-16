@@ -8,7 +8,7 @@ interface Props {
 const priorities: { key: Priority; label: string; color: string }[] = [
   { key: "high", label: "高", color: "bg-red-500" },
   { key: "medium", label: "中", color: "bg-yellow-500" },
-  { key: "low", label: "低", color: "bg-gray-500" },
+  { key: "low", label: "低", color: "bg-gray-400 dark:bg-gray-500" },
 ];
 
 export default function TodoInput({ onAdd }: Props) {
@@ -27,14 +27,14 @@ export default function TodoInput({ onAdd }: Props) {
   };
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-t border-white/10">
+    <div className="flex items-center gap-2 px-3 py-2 border-t border-gray-100 dark:border-white/10">
       <input
         value={text}
         onChange={(e) => setText(e.currentTarget.value)}
         onKeyDown={handleKeyDown}
         placeholder="添加待办..."
-        className="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500
-          outline-none no-drag"
+        className="flex-1 bg-transparent text-sm text-gray-900 dark:text-gray-100
+          placeholder-gray-400 dark:placeholder-gray-500 outline-none no-drag"
       />
       <div className="flex gap-1 no-drag">
         {priorities.map((p) => (
@@ -45,7 +45,7 @@ export default function TodoInput({ onAdd }: Props) {
               transition-all
               ${priority === p.key
                 ? `${p.color} text-white scale-110`
-                : "bg-white/20 text-gray-300 hover:bg-white/30"
+                : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/20"
               }`}
             title={p.label}
           >

@@ -4,7 +4,7 @@ mod storage;
 use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     menu::{MenuBuilder, MenuItemBuilder},
-    Emitter, Manager,
+    Manager,
 };
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
 
@@ -28,12 +28,10 @@ fn run() {
         )
         .setup(|app| {
             let show_item = MenuItemBuilder::with_id("show", "显示/隐藏").build(app)?;
-            let focus_item = MenuItemBuilder::with_id("focus", "专注模式").build(app)?;
             let quit_item = MenuItemBuilder::with_id("quit", "退出").build(app)?;
 
             let menu = MenuBuilder::new(app)
                 .item(&show_item)
-                .item(&focus_item)
                 .separator()
                 .item(&quit_item)
                 .build()?;
@@ -43,11 +41,6 @@ fn run() {
                 .menu(&menu)
                 .on_menu_event(move |app, event| match event.id.as_ref() {
                     "show" => toggle_window(app),
-                    "focus" => {
-                        if let Some(window) = app.get_webview_window("main") {
-                            window.emit("toggle-focus", ()).ok();
-                        }
-                    }
                     "quit" => app.exit(0),
                     _ => {}
                 })
