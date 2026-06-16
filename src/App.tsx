@@ -78,7 +78,8 @@ function App() {
 
   if (!loaded) return null;
 
-  const visibleTodos = expanded ? todos : todos.slice(0, 3);
+  const maxVisible = expanded ? todos.length : 5;
+  const visibleTodos = todos.slice(0, maxVisible);
 
   return (
     <div
@@ -94,15 +95,15 @@ function App() {
       <div className="flex items-center justify-between px-3 py-2 drag-region">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold">📋 FloatTodo</span>
-          {!expanded && todos.length > 3 && (
-            <span className="text-[10px] text-gray-500">+{todos.length - 3}</span>
+          {!expanded && todos.length > 5 && (
+            <span className="text-[10px] text-gray-400">+{todos.length - 5}</span>
           )}
         </div>
         <div className="flex items-center gap-1 no-drag">
           {!expanded && (
             <button
               onClick={toggleExpanded}
-              className="text-gray-600 hover:text-gray-400 text-xs px-1"
+              className="text-gray-400 hover:text-white text-xs px-1"
               title="展开"
             >
               ▸
@@ -113,7 +114,7 @@ function App() {
 
       <div className="flex-1 overflow-y-auto scrollbar-none">
         {visibleTodos.length === 0 ? (
-          <div className="text-center text-gray-600 text-xs py-6">暂无待办</div>
+          <div className="text-center text-gray-500 text-xs py-6">暂无待办</div>
         ) : (
           visibleTodos.map((todo) => (
             <TodoItem

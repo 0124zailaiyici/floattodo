@@ -1,10 +1,9 @@
 import type { Todo, Priority } from "../types/todo";
-// priorityColors kept for future use
 
 const priorityDots: Record<Priority, string> = {
   high: "bg-red-400",
   medium: "bg-yellow-400",
-  low: "bg-gray-600",
+  low: "bg-gray-400",
 };
 
 interface Props {
@@ -16,7 +15,7 @@ interface Props {
 export default function TodoItem({ todo, onToggle, onDelete }: Props) {
   return (
     <div
-      className={`group flex items-center gap-2 px-3 py-1.5 rounded transition-colors
+      className={`flex items-center gap-2 px-3 py-1.5 rounded transition-colors
         ${todo.done ? "opacity-50" : "hover:bg-white/5"}`}
     >
       <button
@@ -25,7 +24,7 @@ export default function TodoItem({ todo, onToggle, onDelete }: Props) {
           transition-all no-drag
           ${todo.done
             ? "bg-green-500 border-green-500 text-white"
-            : "border-gray-600 hover:border-gray-400"
+            : "border-gray-400 hover:border-gray-200"
           }`}
       >
         {todo.done && (
@@ -37,17 +36,16 @@ export default function TodoItem({ todo, onToggle, onDelete }: Props) {
 
       <span
         className={`flex-1 text-sm truncate transition-colors
-          ${todo.done ? "line-through text-gray-600" : "text-gray-200"}`}
+          ${todo.done ? "line-through text-gray-500" : "text-gray-100"}`}
       >
         {todo.text}
       </span>
 
-      <div className={`w-2 h-2 rounded-full ${priorityDots[todo.priority]} opacity-60`} />
+      <div className={`w-2 h-2 rounded-full ${priorityDots[todo.priority]}`} />
 
       <button
         onClick={onDelete}
-        className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400
-          transition-all no-drag text-xs px-1"
+        className="text-gray-400 hover:text-red-400 transition-all no-drag text-xs px-1"
       >
         ✕
       </button>

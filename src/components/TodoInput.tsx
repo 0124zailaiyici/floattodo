@@ -33,7 +33,7 @@ export default function TodoInput({ onAdd }: Props) {
         onChange={(e) => setText(e.currentTarget.value)}
         onKeyDown={handleKeyDown}
         placeholder="添加待办..."
-        className="flex-1 bg-transparent text-sm text-gray-200 placeholder-gray-600
+        className="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500
           outline-none no-drag"
       />
       <div className="flex gap-1 no-drag">
@@ -45,7 +45,7 @@ export default function TodoInput({ onAdd }: Props) {
               transition-all
               ${priority === p.key
                 ? `${p.color} text-white scale-110`
-                : "bg-white/10 text-gray-500 hover:bg-white/20"
+                : "bg-white/20 text-gray-300 hover:bg-white/30"
               }`}
             title={p.label}
           >
