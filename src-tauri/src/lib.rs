@@ -8,11 +8,23 @@ use tauri::{
 };
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
 
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
+
 fn toggle_window(app: &tauri::AppHandle) {
+    static LAST: AtomicU64 = AtomicU64::new(0);
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis() as u64;
+    let last = LAST.load(Ordering::Relaxed);
+    if now.wrapping_sub(last) < 300 {
+        return;
+    }
+    LAST.store(now, Ordering::Relaxed);
+
     if let Some(window) = app.get_webview_window("main") {
         if window.is_visible().ok().unwrap_or(false) {
             window.hide().ok();
         } else {
+            window.unminimize().ok();
             window.show().ok();
             window.set_focus().ok();
         }
