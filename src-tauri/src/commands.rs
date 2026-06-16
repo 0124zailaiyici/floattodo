@@ -3,17 +3,16 @@ use tauri::Manager;
 
 #[tauri::command]
 pub fn save_todos(
-    app: tauri::AppHandle,
     todos: Vec<storage::Todo>,
     dark_mode: bool,
 ) -> Result<(), String> {
     let data = storage::TodoData { todos, dark_mode };
-    storage::save(&app, &data)
+    storage::save(&data)
 }
 
 #[tauri::command]
-pub fn load_todos(app: tauri::AppHandle) -> Result<storage::TodoData, String> {
-    Ok(storage::load(&app))
+pub fn load_todos() -> Result<storage::TodoData, String> {
+    Ok(storage::load())
 }
 
 #[tauri::command]

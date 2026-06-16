@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Todo {
     pub id: String,
     pub text: String,
@@ -13,22 +13,20 @@ pub struct Todo {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TodoData {
     pub todos: Vec<Todo>,
     pub dark_mode: bool,
 }
 
-fn data_path(app: &tauri::AppHandle) -> PathBuf {
-    let path = app
-        .path()
-        .app_data_dir()
-        .expect("failed to get app data dir");
-    fs::create_dir_all(&path).ok();
-    path.join("todos.json")
+fn data_path() -> PathBuf {
+    let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
+    let dir = exe.parent().unwrap_or(std::path::Path::new("."));
+    dir.join("floattodo-data.json")
 }
 
-pub fn load(app: &tauri::AppHandle) -> TodoData {
-    let path = data_path(app);
+pub fn load() -> TodoData {
+    let path = data_path();
     if !path.exists() {
         return TodoData {
             todos: vec![],
@@ -44,8 +42,8 @@ pub fn load(app: &tauri::AppHandle) -> TodoData {
         })
 }
 
-pub fn save(app: &tauri::AppHandle, data: &TodoData) -> Result<(), String> {
-    let path = data_path(app);
+pub fn save(data: &TodoData) -> Result<(), String> {
+    let path = data_path();
     let json = serde_json::to_string_pretty(data).map_err(|e| e.to_string())?;
     fs::write(&path, json).map_err(|e| e.to_string())?;
     Ok(())
