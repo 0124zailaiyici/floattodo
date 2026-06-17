@@ -5,8 +5,9 @@ use tauri::Manager;
 pub fn save_todos(
     todos: Vec<storage::Todo>,
     dark_mode: bool,
+    groups: Vec<String>,
 ) -> Result<(), String> {
-    let data = storage::TodoData { todos, dark_mode };
+    let data = storage::TodoData { todos, dark_mode, groups };
     storage::save(&data)
 }
 

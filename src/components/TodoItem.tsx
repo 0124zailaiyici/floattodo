@@ -1,3 +1,4 @@
+import { useTodoStore } from "../store/todoStore";
 import type { Todo, Priority } from "../types/todo";
 
 const priorityDots: Record<Priority, string> = {
@@ -13,14 +14,17 @@ interface Props {
 }
 
 export default function TodoItem({ todo, onToggle, onDelete }: Props) {
+  const { expandedId, setExpandedId, groups, moveTodo } = useTodoStore();
+  const isExpanded = expandedId === todo.id;
+
   return (
     <div
-      className={`flex items-center gap-2 px-3 py-1.5 transition-colors
+      className={`flex items-start gap-2 px-3 py-1.5 transition-colors group
         ${todo.done ? "opacity-40" : "hover:bg-gray-50 dark:hover:bg-white/5"}`}
     >
       <button
         onClick={onToggle}
-        className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center
+        className={`mt-0.5 w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center
           transition-all no-drag
           ${todo.done
             ? "bg-green-500 border-green-500 text-white"
@@ -34,23 +38,44 @@ export default function TodoItem({ todo, onToggle, onDelete }: Props) {
         )}
       </button>
 
-      <span
-        className={`flex-1 text-sm truncate transition-colors
-          ${todo.done
-            ? "line-through text-gray-300 dark:text-gray-600"
-            : "text-gray-900 dark:text-gray-100"}`}
-      >
-        {todo.text}
-      </span>
+      <div className="flex-1 min-w-0 cursor-pointer no-drag" onClick={() => setExpandedId(isExpanded ? null : todo.id)}>
+        <span
+          className={`text-sm block transition-colors break-words
+            ${isExpanded ? "" : "line-clamp-1"}
+            ${todo.done
+              ? "line-through text-gray-300 dark:text-gray-600"
+              : "text-gray-900 dark:text-gray-100"}`}
+        >
+          {todo.text}
+        </span>
+      </div>
 
-      <div className={`w-2 h-2 rounded-full ${priorityDots[todo.priority]}`} />
+      <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+        <div className={`w-2 h-2 rounded-full ${priorityDots[todo.priority]}`} />
 
-      <button
-        onClick={onDelete}
-        className="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-all no-drag text-xs px-1"
-      >
-        ✕
-      </button>
+        {groups.length > 1 && (
+          <select
+            value={todo.group}
+            onChange={(e) => moveTodo(todo.id, e.currentTarget.value)}
+            className="text-[9px] bg-transparent text-gray-400 dark:text-gray-500
+              border border-gray-200 dark:border-white/10 rounded px-0.5 py-0
+              outline-none no-drag cursor-pointer max-w-[48px] truncate"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {groups.map((g) => (
+              <option key={g} value={g}>{g}</option>
+            ))}
+          </select>
+        )}
+
+        <button
+          onClick={onDelete}
+          className="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400
+            transition-all no-drag text-xs px-1"
+        >
+          ✕
+        </button>
+      </div>
     </div>
   );
 }

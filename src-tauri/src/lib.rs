@@ -68,7 +68,7 @@ fn run() {
                 })
                 .build(app)?;
 
-            app.global_shortcut().register("Ctrl+Shift+T")?;
+            app.global_shortcut().register("Alt+X")?;
 
             if let Some(window) = app.get_webview_window("main") {
                 window.show().ok();

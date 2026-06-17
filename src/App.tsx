@@ -14,10 +14,12 @@ function App() {
     collapsed,
     darkMode,
     loaded,
+    groups,
     addTodo,
     toggleTodo,
     deleteTodo,
     toggleCollapsed,
+    deleteGroup,
     loadFromDisk,
   } = useTodoStore();
 
@@ -33,10 +35,10 @@ function App() {
           if (data) loadFromDisk(data);
         });
       } else {
-        loadFromDisk({ todos: [], darkMode: true });
+        loadFromDisk({ todos: [], darkMode: true, groups: ["默认"] });
       }
     } catch {
-      loadFromDisk({ todos: [], darkMode: true });
+      loadFromDisk({ todos: [], darkMode: true, groups: ["默认"] });
     }
   }, []);
 
@@ -130,14 +132,35 @@ function App() {
             暂无待办
           </div>
         ) : (
-          todos.map((todo) => (
-            <TodoItem
-              key={todo.id}
-              todo={todo}
-              onToggle={() => toggleTodo(todo.id)}
-              onDelete={() => deleteTodo(todo.id)}
-            />
-          ))
+          groups.map((group) => {
+            const groupTodos = todos.filter((t) => t.group === group);
+            if (groupTodos.length === 0) return null;
+            return (
+              <div key={group}>
+                <div className="flex items-center gap-1 px-3 py-1 text-[10px] text-gray-400 dark:text-gray-500
+                  bg-gray-50/50 dark:bg-white/5 border-b border-gray-100 dark:border-white/5">
+                  <span>{group}</span>
+                  <span className="ml-auto">{groupTodos.filter((t) => !t.done).length}/{groupTodos.length}</span>
+                  {group !== "默认" && (
+                    <button
+                      onClick={() => deleteGroup(group)}
+                      className="text-gray-300 dark:text-gray-600 hover:text-red-400 no-drag ml-1"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {groupTodos.map((todo) => (
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    onToggle={() => toggleTodo(todo.id)}
+                    onDelete={() => deleteTodo(todo.id)}
+                  />
+                ))}
+              </div>
+            );
+          })
         )}
       </div>
 

@@ -5,13 +5,30 @@ import { LogicalSize } from "@tauri-apps/api/dpi";
 
 const appWindow = getCurrentWebviewWindow();
 
+const PRIORITY_ORDER: Record<Priority, number> = {
+  high: 0,
+  medium: 1,
+  low: 2,
+};
+
+function sortTodos(todos: Todo[]): Todo[] {
+  return [...todos].sort((a, b) => {
+    const pa = PRIORITY_ORDER[a.priority];
+    const pb = PRIORITY_ORDER[b.priority];
+    if (pa !== pb) return pa - pb;
+    return a.createdAt - b.createdAt;
+  });
+}
+
 interface TodoStore {
   todos: Todo[];
   collapsed: boolean;
   darkMode: boolean;
   loaded: boolean;
+  groups: string[];
+  expandedId: string | null;
 
-  addTodo: (text: string, priority: Priority) => void;
+  addTodo: (text: string, priority: Priority, group: string) => void;
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
   clearDone: () => void;
@@ -20,6 +37,10 @@ interface TodoStore {
   setDarkMode: (v: boolean) => void;
   loadFromDisk: (data: TodoData) => void;
   saveToDisk: () => void;
+  addGroup: (name: string) => void;
+  deleteGroup: (name: string) => void;
+  moveTodo: (id: string, group: string) => void;
+  setExpandedId: (id: string | null) => void;
 }
 
 function generateId(): string {
@@ -31,16 +52,19 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   collapsed: true,
   darkMode: true,
   loaded: false,
+  groups: ["默认"],
+  expandedId: null,
 
-  addTodo: (text, priority) => {
+  addTodo: (text, priority, group) => {
     const todo: Todo = {
       id: generateId(),
       text,
       done: false,
       priority,
       createdAt: Date.now(),
+      group: group || "默认",
     };
-    set((s) => ({ todos: [todo, ...s.todos] }));
+    set((s) => ({ todos: sortTodos([todo, ...s.todos]) }));
     get().saveToDisk();
   },
 
@@ -75,16 +99,47 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   },
 
   loadFromDisk: (data) => {
-    set({ todos: data.todos, darkMode: data.darkMode, loaded: true });
+    set({
+      todos: sortTodos(data.todos),
+      darkMode: data.darkMode,
+      groups: data.groups?.length ? data.groups : ["默认"],
+      loaded: true,
+    });
   },
 
   saveToDisk: () => {
-    const { todos, darkMode } = get();
+    const { todos, darkMode, groups } = get();
     try {
       const invoke = (window as any).__TAURI_INTERNALS__?.invoke;
       if (invoke) {
-        invoke("save_todos", { todos, darkMode });
+        invoke("save_todos", { todos, darkMode, groups });
       }
     } catch {}
   },
+
+  addGroup: (name) => {
+    set((s) => {
+      if (s.groups.includes(name)) return s;
+      return { groups: [...s.groups, name] };
+    });
+    get().saveToDisk();
+  },
+
+  deleteGroup: (name) => {
+    if (name === "默认") return;
+    set((s) => ({
+      groups: s.groups.filter((g) => g !== name),
+      todos: s.todos.map((t) => (t.group === name ? { ...t, group: "默认" } : t)),
+    }));
+    get().saveToDisk();
+  },
+
+  moveTodo: (id, group) => {
+    set((s) => ({
+      todos: s.todos.map((t) => (t.id === id ? { ...t, group } : t)),
+    }));
+    get().saveToDisk();
+  },
+
+  setExpandedId: (id) => set({ expandedId: id }),
 }));

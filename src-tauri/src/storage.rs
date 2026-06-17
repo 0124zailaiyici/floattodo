@@ -10,6 +10,12 @@ pub struct Todo {
     pub done: bool,
     pub priority: String,
     pub created_at: u64,
+    #[serde(default = "default_group")]
+    pub group: String,
+}
+
+fn default_group() -> String {
+    "默认".to_string()
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -17,6 +23,12 @@ pub struct Todo {
 pub struct TodoData {
     pub todos: Vec<Todo>,
     pub dark_mode: bool,
+    #[serde(default = "default_groups")]
+    pub groups: Vec<String>,
+}
+
+fn default_groups() -> Vec<String> {
+    vec!["默认".to_string()]
 }
 
 fn data_path() -> PathBuf {
@@ -31,6 +43,7 @@ pub fn load() -> TodoData {
         return TodoData {
             todos: vec![],
             dark_mode: true,
+            groups: default_groups(),
         };
     }
     fs::read_to_string(&path)
@@ -39,6 +52,7 @@ pub fn load() -> TodoData {
         .unwrap_or(TodoData {
             todos: vec![],
             dark_mode: true,
+            groups: default_groups(),
         })
 }
 
