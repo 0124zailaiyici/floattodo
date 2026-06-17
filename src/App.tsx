@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useTodoStore } from "./store/todoStore";
 import TodoItem from "./components/TodoItem";
 import TodoInput from "./components/TodoInput";
@@ -22,6 +22,7 @@ function App() {
     deleteGroup,
     loadFromDisk,
   } = useTodoStore();
+  const [confirmGroup, setConfirmGroup] = useState<string | null>(null);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
@@ -141,12 +142,25 @@ function App() {
                   bg-gray-50/50 dark:bg-white/5 border-b border-gray-100 dark:border-white/5">
                   <span>{group}</span>
                   <span className="ml-auto">{groupTodos.filter((t) => !t.done).length}/{groupTodos.length}</span>
-                  <button
-                    onClick={() => { if (window.confirm(`删除分组「${group}」？待办将移至其他分组`)) deleteGroup(group); }}
-                    className="text-gray-400 dark:text-gray-500 hover:text-red-400 no-drag ml-1"
-                  >
-                    ✕
-                  </button>
+                  {confirmGroup === group ? (
+                    <span className="flex items-center gap-1 ml-1">
+                      <button
+                        onClick={() => { deleteGroup(group); setConfirmGroup(null); }}
+                        className="text-[10px] text-red-400 hover:text-red-300 no-drag"
+                      >确认</button>
+                      <button
+                        onClick={() => setConfirmGroup(null)}
+                        className="text-[10px] text-gray-400 hover:text-gray-300 no-drag"
+                      >取消</button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmGroup(group)}
+                      className="text-gray-400 dark:text-gray-500 hover:text-red-400 no-drag ml-1"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
                 {groupTodos.map((todo) => (
                   <TodoItem
