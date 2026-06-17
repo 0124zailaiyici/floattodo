@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { useTodoStore } from "../store/todoStore";
 import type { Todo, Priority } from "../types/todo";
 
@@ -14,8 +15,25 @@ interface Props {
 }
 
 export default function TodoItem({ todo, onToggle, onDelete }: Props) {
-  const { expandedId, setExpandedId, groups, moveTodo } = useTodoStore();
+  const { expandedId, setExpandedId, groups, moveTodo, editTodo } = useTodoStore();
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState(todo.text);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const isExpanded = expandedId === todo.id;
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  const saveEdit = () => {
+    const t = editText.trim();
+    if (t && t !== todo.text) editTodo(todo.id, t);
+    setEditing(false);
+  };
 
   return (
     <div
@@ -38,16 +56,38 @@ export default function TodoItem({ todo, onToggle, onDelete }: Props) {
         )}
       </button>
 
-      <div className="flex-1 min-w-0 cursor-pointer no-drag" onClick={() => setExpandedId(isExpanded ? null : todo.id)}>
-        <span
-          className={`text-sm block transition-colors break-words
-            ${isExpanded ? "" : "line-clamp-1"}
-            ${todo.done
-              ? "line-through text-gray-300 dark:text-gray-600"
-              : "text-gray-900 dark:text-gray-100"}`}
-        >
-          {todo.text}
-        </span>
+      <div className="flex-1 min-w-0">
+        {editing ? (
+          <input
+            ref={inputRef}
+            value={editText}
+            onChange={(e) => setEditText(e.currentTarget.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(false); }}
+            onBlur={saveEdit}
+            className="w-full text-sm bg-transparent text-gray-900 dark:text-gray-100
+              border-b border-cyan-400 outline-none no-drag"
+          />
+        ) : (
+          <div className="flex items-center gap-1 cursor-pointer no-drag" onClick={() => setExpandedId(isExpanded ? null : todo.id)}>
+            <span
+              className={`text-sm block break-words flex-1
+                ${isExpanded ? "" : "line-clamp-1"}
+                ${todo.done
+                  ? "line-through text-gray-300 dark:text-gray-600"
+                  : "text-gray-900 dark:text-gray-100"}`}
+            >
+              {todo.text}
+            </span>
+            <button
+              onClick={(e) => { e.stopPropagation(); setEditText(todo.text); setEditing(true); }}
+              className="text-gray-200 dark:text-gray-700 hover:text-gray-500 dark:hover:text-gray-400
+                opacity-0 group-hover:opacity-100 transition-all no-drag text-[10px] px-0.5 flex-shrink-0"
+              title="编辑"
+            >
+              ✎
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">

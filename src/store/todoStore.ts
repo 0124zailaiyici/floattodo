@@ -30,6 +30,7 @@ interface TodoStore {
 
   addTodo: (text: string, priority: Priority, group: string) => void;
   toggleTodo: (id: string) => void;
+  editTodo: (id: string, text: string) => void;
   deleteTodo: (id: string) => void;
   clearDone: () => void;
   setCollapsed: (v: boolean) => void;
@@ -71,6 +72,13 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   toggleTodo: (id) => {
     set((s) => ({
       todos: s.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
+    }));
+    get().saveToDisk();
+  },
+
+  editTodo: (id, text) => {
+    set((s) => ({
+      todos: s.todos.map((t) => (t.id === id ? { ...t, text } : t)),
     }));
     get().saveToDisk();
   },
@@ -126,11 +134,15 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   },
 
   deleteGroup: (name) => {
-    if (name === "默认") return;
-    set((s) => ({
-      groups: s.groups.filter((g) => g !== name),
-      todos: s.todos.map((t) => (t.group === name ? { ...t, group: "默认" } : t)),
-    }));
+    set((s) => {
+      const remaining = s.groups.filter((g) => g !== name);
+      if (remaining.length === 0) return s;
+      const fallback = remaining[0];
+      return {
+        groups: remaining,
+        todos: s.todos.map((t) => (t.group === name ? { ...t, group: fallback } : t)),
+      };
+    });
     get().saveToDisk();
   },
 

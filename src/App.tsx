@@ -141,14 +141,12 @@ function App() {
                   bg-gray-50/50 dark:bg-white/5 border-b border-gray-100 dark:border-white/5">
                   <span>{group}</span>
                   <span className="ml-auto">{groupTodos.filter((t) => !t.done).length}/{groupTodos.length}</span>
-                  {group !== "默认" && (
-                    <button
-                      onClick={() => deleteGroup(group)}
-                      className="text-gray-300 dark:text-gray-600 hover:text-red-400 no-drag ml-1"
-                    >
-                      ✕
-                    </button>
-                  )}
+                  <button
+                    onClick={() => deleteGroup(group)}
+                    className="text-gray-300 dark:text-gray-600 hover:text-red-400 no-drag ml-1"
+                  >
+                    ✕
+                  </button>
                 </div>
                 {groupTodos.map((todo) => (
                   <TodoItem
