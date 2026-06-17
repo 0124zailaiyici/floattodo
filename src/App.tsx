@@ -142,8 +142,8 @@ function App() {
                   <span>{group}</span>
                   <span className="ml-auto">{groupTodos.filter((t) => !t.done).length}/{groupTodos.length}</span>
                   <button
-                    onClick={() => deleteGroup(group)}
-                    className="text-gray-300 dark:text-gray-600 hover:text-red-400 no-drag ml-1"
+                    onClick={() => { if (window.confirm(`删除分组「${group}」？待办将移至其他分组`)) deleteGroup(group); }}
+                    className="text-gray-400 dark:text-gray-500 hover:text-red-400 no-drag ml-1"
                   >
                     ✕
                   </button>

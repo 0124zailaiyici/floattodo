@@ -80,8 +80,8 @@ export default function TodoItem({ todo, onToggle, onDelete }: Props) {
             </span>
             <button
               onClick={(e) => { e.stopPropagation(); setEditText(todo.text); setEditing(true); }}
-              className="text-gray-200 dark:text-gray-700 hover:text-gray-500 dark:hover:text-gray-400
-                opacity-0 group-hover:opacity-100 transition-all no-drag text-[10px] px-0.5 flex-shrink-0"
+              className="text-gray-400 dark:text-gray-500 hover:text-cyan-500 dark:hover:text-cyan-400
+                transition-colors no-drag text-[11px] px-0.5 flex-shrink-0"
               title="编辑"
             >
               ✎
@@ -110,8 +110,8 @@ export default function TodoItem({ todo, onToggle, onDelete }: Props) {
 
         <button
           onClick={onDelete}
-          className="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400
-            transition-all no-drag text-xs px-1"
+          className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400
+            transition-colors no-drag text-xs px-1"
         >
           ✕
         </button>
